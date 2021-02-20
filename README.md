@@ -1,0 +1,2 @@
+# gobsdiff
+bsdiff in golang
