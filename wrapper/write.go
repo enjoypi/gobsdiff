@@ -1,6 +1,5 @@
 package wrapper
 
-
 // #include "../bsdiff/bsdiff.h"
 import "C"
 import (
@@ -16,5 +15,3 @@ func cgo_write(stream *C.struct_bsdiff_stream, buffer unsafe.Pointer, size int) 
 	}
 	return 0
 }
-
-

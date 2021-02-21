@@ -32,7 +32,7 @@ func Diff(oldReader, newReader io.Reader, patchWriter io.Writer) (err error) {
 
 	oldP := C.CBytes(oldB)
 	newP := C.CBytes(newB)
-	ret := C.cgo_bsdiff(oldP, len(oldB), newB,len(newP), unsafe.Pointer(patchWriter))
+	ret := C.cgo_bsdiff(oldP, len(oldB), newB, len(newP), unsafe.Pointer(patchWriter))
 	fmt.Println(C.bsdiff)
 	fmt.Printf("%p\n", C.bsdiff)
 	stream := new(C.struct_bsdiff_stream)
@@ -41,7 +41,5 @@ func Diff(oldReader, newReader io.Reader, patchWriter io.Writer) (err error) {
 	//stream.write = write
 	fmt.Printf("%+v\n", stream)
 
-
 	return nil
 }
-
