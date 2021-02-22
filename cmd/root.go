@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"strings"
 
@@ -24,42 +25,56 @@ var rootCmd = &cobra.Command{
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 2 {
+		if len(args) < 1 {
 			return cmd.Help()
 		}
 
-		lhs, err := os.Open(args[0])
+		f, err := os.Open(args[0])
 		if err != nil {
 			return err
 		}
-		defer lhs.Close()
+		defer f.Close()
 
-		rhs, err := os.Open(args[1])
-		if err != nil {
-			return err
-		}
-		defer rhs.Close()
-
-		out, err := os.Create(args[2])
-		if err != nil {
-			return err
-		}
-		defer out.Close()
-
-		patch := new(bytes.Buffer)
-		if err := wrapper.Diff(lhs, rhs, patch); err != nil {
-			return err
+		sig := wrapper.RSSig(f)
+		if sig == nil {
+			return fmt.Errorf("invalid sig file")
 		}
 
-		cmd.Println("diff size ", patch.Len())
-		if _, err := patch.WriteTo(out); err != nil {
-			return err
-		}
-
+		cmd.Println(sig.Name())
 		return nil
 	},
 	SilenceErrors: true,
 	SilenceUsage:  true,
+}
+
+func useBsdiff(args []string) (error, bool) {
+	lhs, err := os.Open(args[0])
+	if err != nil {
+		return err, true
+	}
+	defer lhs.Close()
+
+	rhs, err := os.Open(args[1])
+	if err != nil {
+		return err, true
+	}
+	defer rhs.Close()
+
+	out, err := os.Create(args[2])
+	if err != nil {
+		return err, true
+	}
+	defer out.Close()
+
+	patch := new(bytes.Buffer)
+	if err := wrapper.Diff(lhs, rhs, patch); err != nil {
+		return err, true
+	}
+
+	if _, err := patch.WriteTo(out); err != nil {
+		return err, true
+	}
+	return nil, false
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

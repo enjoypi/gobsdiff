@@ -1,6 +1,6 @@
 package wrapper
 
-// #include "../bsdiff/bsdiff.c"
+//#include "../bsdiff/bsdiff.c"
 // #include <stdio.h>
 // #include <stdlib.h>
 // extern int cgo_write(struct bsdiff_stream* stream, const void* buffer, int size);
