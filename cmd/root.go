@@ -40,12 +40,22 @@ var rootCmd = &cobra.Command{
 		}
 		defer rhs.Close()
 
+		out, err := os.Create(args[2])
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+
 		patch := new(bytes.Buffer)
 		if err := wrapper.Diff(lhs, rhs, patch); err != nil {
 			return err
 		}
 
 		cmd.Println("diff size ", patch.Len())
+		if _, err := patch.WriteTo(out); err != nil {
+			return err
+		}
+
 		return nil
 	},
 	SilenceErrors: true,
