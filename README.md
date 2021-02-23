@@ -1,2 +1,2 @@
-# gobsdiff
-bsdiff in golang
+# gordiff
+rdiff in golang from librsync
