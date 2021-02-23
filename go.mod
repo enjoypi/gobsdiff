@@ -1,4 +1,4 @@
-module github.com/enjoypi/gobsdiff
+module github.com/enjoypi/gordiff
 
 go 1.15
 

@@ -3,7 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/enjoypi/gobsdiff/wrapper"
+	"github.com/enjoypi/gordiff/wrapper"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )

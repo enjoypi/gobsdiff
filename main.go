@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/enjoypi/gobsdiff/cmd"
+	"github.com/enjoypi/gordiff/cmd"
 )
 
 func main() {
