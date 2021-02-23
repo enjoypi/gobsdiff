@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"bytes"
-	"os"
 	"strings"
 
 	"github.com/enjoypi/gobsdiff/wrapper"
@@ -37,36 +35,6 @@ var rootCmd = &cobra.Command{
 	},
 	SilenceErrors: true,
 	SilenceUsage:  true,
-}
-
-func useBsdiff(args []string) (error, bool) {
-	lhs, err := os.Open(args[0])
-	if err != nil {
-		return err, true
-	}
-	defer lhs.Close()
-
-	rhs, err := os.Open(args[1])
-	if err != nil {
-		return err, true
-	}
-	defer rhs.Close()
-
-	out, err := os.Create(args[2])
-	if err != nil {
-		return err, true
-	}
-	defer out.Close()
-
-	patch := new(bytes.Buffer)
-	if err := wrapper.Diff(lhs, rhs, patch); err != nil {
-		return err, true
-	}
-
-	if _, err := patch.WriteTo(out); err != nil {
-		return err, true
-	}
-	return nil, false
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
