@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/enjoypi/gobsdiff/wrapper"
-
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -29,18 +27,12 @@ var rootCmd = &cobra.Command{
 			return cmd.Help()
 		}
 
-		f, err := os.Open(args[0])
+		delta, err := wrapper.RSDelta(args[0], "", args[1])
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		cmd.Println(delta)
 
-		sig := wrapper.RSSig(f)
-		if sig == nil {
-			return fmt.Errorf("invalid sig file")
-		}
-
-		cmd.Println(sig.Name())
 		return nil
 	},
 	SilenceErrors: true,

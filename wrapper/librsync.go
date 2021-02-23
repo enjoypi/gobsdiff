@@ -4,8 +4,8 @@ package wrapper
 // #include <librsync.h>
 import "C"
 import (
+	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 )
 
@@ -35,23 +35,32 @@ import (
 //                                      size_t block_len, size_t strong_len,
 //                                      rs_magic_number sig_magic,
 //                                      rs_stats_t *stats);
-
-func RSSig(file *os.File) *os.File {
-	sig, err := ioutil.TempFile("", filepath.Base(file.Name()))
+func RSSig(file string) (string, error) {
+	oldFile, err := C.fopen(C.CString(file), C.CString("r"))
 	if err != nil {
-		return nil
+		return "", err
 	}
+	defer C.fclose(oldFile)
 
-	oldFile := C.fdopen(C.int(file.Fd()), C.CString("r"))
-	sigFile := C.fdopen(C.int(sig.Fd()), C.CString("w+"))
+	sig, err := ioutil.TempFile("", fmt.Sprintf("%s.*.sign", filepath.Base(file)))
+	if err != nil {
+		return "", err
+	}
+	defer sig.Close()
+
+	sigFile, err := C.fdopen(C.int(sig.Fd()), C.CString("w+"))
+	if err != nil {
+		return "", err
+	}
+	defer C.fclose(sigFile)
+
 	var stats C.rs_stats_t
 	ret := C.rs_sig_file(oldFile, sigFile, 0, 0, 0, &stats)
-	if ret == C.RS_DONE {
-		return sig
+	if ret != C.RS_DONE {
+		return "", fmt.Errorf("%d", ret)
 	}
 
-	sig.Close()
-	return nil
+	return sig.Name(), nil
 }
 
 //
@@ -73,7 +82,61 @@ func RSSig(file *os.File) *os.File {
 // * \sa \ref api_whole */
 // rs_result rs_delta_file(rs_signature_t *, FILE *new_file,
 //                                        FILE *delta_file, rs_stats_t *);
-//
+func RSDelta(old, sig, new string) (string, error) {
+	if sig == "" {
+		var err error
+		sig, err = RSSig(old)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	sigFile, err := C.fopen(C.CString(sig), C.CString("r"))
+	if err != nil {
+		return "", err
+	}
+	defer C.fclose(sigFile)
+
+	var sumset *C.rs_signature_t
+	var stats C.rs_stats_t
+	ret := C.rs_loadsig_file(sigFile, &sumset, &stats)
+	if ret != C.RS_DONE {
+		return "", fmt.Errorf("rs_result %d", ret)
+	}
+
+	ret = C.rs_build_hash_table(sumset)
+	if ret != C.RS_DONE {
+		return "", fmt.Errorf("rs_result %d", ret)
+	}
+
+	newFile, err := C.fopen(C.CString(new), C.CString("r"))
+	if err != nil {
+		return "", err
+	}
+	defer C.fclose(newFile)
+
+	delta, err := ioutil.TempFile("",
+		fmt.Sprintf("%s-%s.*.delta", filepath.Base(old), filepath.Base(new)))
+	if err != nil {
+		return "", err
+	}
+	defer delta.Close()
+
+	deltaFile, err := C.fdopen(C.int(delta.Fd()), C.CString("w+"))
+	if err != nil {
+		return "", err
+	}
+	defer C.fclose(deltaFile)
+
+	var deltaStats C.rs_stats_t
+	ret = C.rs_delta_file(sumset, newFile, deltaFile, &deltaStats)
+	if ret != C.RS_DONE {
+		return "", fmt.Errorf("rs_result %d", ret)
+	}
+
+	return delta.Name(), nil
+}
+
 ///** Apply a patch, relative to a basis, into a new file.
 // *
 // * \sa \ref api_whole */
