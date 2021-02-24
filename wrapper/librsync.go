@@ -103,6 +103,7 @@ func RSDelta(old, sig, new string) (string, error) {
 	if ret != C.RS_DONE {
 		return "", fmt.Errorf("rs_result %d", ret)
 	}
+	defer C.rs_free_sumset(sumset)
 
 	ret = C.rs_build_hash_table(sumset)
 	if ret != C.RS_DONE {
