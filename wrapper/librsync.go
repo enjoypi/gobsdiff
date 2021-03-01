@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-// /** Generate the signature of a basis file, and write it out to another.
+// RSSig /** Generate the signature of a basis file, and write it out to another.
 // *
 // * It's recommended you use rs_sig_args() to get the recommended arguments for
 // * this based on the original file size.
@@ -36,7 +36,7 @@ import (
 //                                      rs_magic_number sig_magic,
 //                                      rs_stats_t *stats);
 func RSSig(file string) (string, error) {
-	oldFile, err := C.fopen(C.CString(file), C.CString("r"))
+	oldFile, err := C.fopen(C.CString(file), C.CString("rb"))
 	if err != nil {
 		return "", err
 	}
@@ -46,9 +46,9 @@ func RSSig(file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer sig.Close()
+	sig.Close()
 
-	sigFile, err := C.fdopen(C.int(sig.Fd()), C.CString("w+"))
+	sigFile, err := C.fopen(C.CString(sig.Name()), C.CString("wb"))
 	if err != nil {
 		return "", err
 	}
@@ -63,7 +63,7 @@ func RSSig(file string) (string, error) {
 	return sig.Name(), nil
 }
 
-//
+// RSDelta Generate a delta between a signature and a new file into a delta file.
 ///** Load signatures from a signature file into memory.
 // *
 // * \param sig_file Readable stdio file from which the signature will be read.
@@ -91,7 +91,7 @@ func RSDelta(old, sig, new string) (string, error) {
 		}
 	}
 
-	sigFile, err := C.fopen(C.CString(sig), C.CString("r"))
+	sigFile, err := C.fopen(C.CString(sig), C.CString("rb"))
 	if err != nil {
 		return "", err
 	}
@@ -110,7 +110,7 @@ func RSDelta(old, sig, new string) (string, error) {
 		return "", fmt.Errorf("rs_result %d", ret)
 	}
 
-	newFile, err := C.fopen(C.CString(new), C.CString("r"))
+	newFile, err := C.fopen(C.CString(new), C.CString("rb"))
 	if err != nil {
 		return "", err
 	}
@@ -121,9 +121,9 @@ func RSDelta(old, sig, new string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer delta.Close()
+	delta.Close()
 
-	deltaFile, err := C.fdopen(C.int(delta.Fd()), C.CString("w+"))
+	deltaFile, err := C.fopen(C.CString(delta.Name()), C.CString("wb"))
 	if err != nil {
 		return "", err
 	}
